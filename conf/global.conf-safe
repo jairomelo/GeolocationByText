@@ -8,4 +8,4 @@ password =
 database = 
 
 [sparql]
-tgn_endpoint = 
+tgn_endpoint = https://vocab.getty.edu/sparql
