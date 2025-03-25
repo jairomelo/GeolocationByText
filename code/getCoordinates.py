@@ -82,9 +82,51 @@ class TGNQuery:
                 return self.get_coordinates_lod_json(uri)
         
         return (None, None)
+
+class HGISQuery:
+    def __init__(self, endpoint: str):
+        self.collection = "lugares13k_rel"
+        self.endpoint = endpoint
+        self.search_domain = "/index"
+        
+    def places_by_name(self, place_name: str, ccode: str = None, fclass: str = 'p') -> dict:
+        """
+        Search for place using the World Historical Gazetteer API https://docs.whgazetteer.org/content/400-Technical.html#api
+        
+        Parameters:
+            place_name (str): Any string with the name of the place. This keyword includes place names variants.
+            ccode (str): ISO 3166-1 alpha-2 country code.
+            fclass (str): Feature class according to Linked Places Format. Default is 'p' for place. Look at https://github.com/LinkedPasts/linked-places-format for more places classes.         
+        """
+        
+        url = f"{self.endpoint}{self.search_domain}/?name={place_name}&dataset={self.collection}&ccodes={ccode}&fclass={fclass}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.error(f"Error searching for '{place_name}' in {ccode} with fclass {fclass}: {response.status_code}")
+            return {}
+        
+    def get_best_match(self, results: dict, place_name: str, fuzzy_thresshold: float = 90, placetype: str = None, ccode: str = None) -> tuple:
+        
+        if len(results["features"]) == 0:
+            return (None, None)
+        
+        if len(results["features"]) == 1:
+            coordinates = results["features"][0].get("geometry").get("coordinates")
+            return coordinates[1], coordinates[0]
+
+        for r in results["features"]:
+            placetypes = r.get("properties").get("placetypes")
+            ccodes = r.get("properties").get("ccodes")
+            if placetype.capitalize() in placetypes and ccode in ccodes:
+                coordinates = r.get("geometry").get("coordinates")
+                return coordinates[1], coordinates[0]
+
+        return (None, None)
     
 if __name__ == "__main__":
-    tgn_query = TGNQuery(config["sparql"]["tgn_endpoint"])
-    results = tgn_query.Places_by_Triple_FTS("veracruz", "MX", "ciudad")
-    coords = tgn_query.get_best_match(results, "veracruz")
-    print("Coordinates:", coords)
+    hgis_query = HGISQuery(config["apis"]["hgis_endpoint"])
+    results = hgis_query.places_by_name(place_name="cuicatlán", fclass="p", ccode="MX")
+    best_match = hgis_query.get_best_match(results, "cuicatlán", 90, "pueblo", ccode="MX")
+    print(best_match)
