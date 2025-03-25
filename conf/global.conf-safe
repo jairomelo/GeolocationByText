@@ -6,3 +6,6 @@ host =
 user = 
 password = 
 database = 
+
+[sparql]
+tgn_endpoint = 
