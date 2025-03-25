@@ -111,7 +111,7 @@ COMMIT;
 -- Update foreign key references
 UPDATE `dbgestor_personalugarrel` SET `lugar_id` = 39 WHERE `lugar_id` = 116;
 UPDATE `dbgestor_personalugarrel` SET `lugar_id` = 91 WHERE `lugar_id` = 140;
-UPDATE `dbgestor_personalugarrel` SET `lugar_id` = 4 WHERE `lugar_id` = 5;
+UPDATE `dbgestor_personalugarrel` SET `lugar_id` = 5 WHERE `lugar_id` = 4;
 UPDATE `dbgestor_personalugarrel` SET `lugar_id` = 173 WHERE `lugar_id` = 294;
 UPDATE `dbgestor_archivo` SET `ubicacion_archivo_id` = 39 WHERE `ubicacion_archivo_id` = 116;
 UPDATE `dbgestor_archivo` SET `ubicacion_archivo_id` = 91 WHERE `ubicacion_archivo_id` = 140;
