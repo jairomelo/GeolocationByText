@@ -5,9 +5,12 @@ import os
 import logging
 import requests
 import ast
+from dotenv import load_dotenv
 
 config = configparser.ConfigParser()
 config.read("conf/global.conf")
+
+load_dotenv(config["default"]["env_file"])
 
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename="logs/getCoordinates.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
@@ -178,9 +181,132 @@ class HGISQuery:
         except Exception as e:
             logger.error(f"Error processing results: {str(e)}")
             return (None, None)
+        
+class GeonamesQuery:
+    """
+    A class to interact with the Geonames API.
+    """
+    def __init__(self, endpoint: str):
+        self.endpoint = endpoint
+        
+
+class WikidataQuery:
+    """
+    A class to interact with the Wikidata API for geographic coordinates lookup.
     
+    This class provides methods to search and retrieve geographic coordinates for places
+    using the Wikidata API. It supports filtering by country and place type.
+
+    Attributes:
+        endpoint (str): The base URL for the Wikidata API
+    """
+    def __init__(self, endpoint: str):
+        self.endpoint = endpoint
+
+    def places_by_name(self, place_name: str, country_code: str = None, place_type: str = None) -> dict:
+        """
+        Search for places using the Wikidata API.
+        
+        Parameters:
+            place_name (str): Name of the place to search for
+            country_code (str): Optional ISO 3166-1 alpha-2 country code
+            place_type (str): Optional type of place (e.g., 'pueblo', 'city', 'village', 'municipality')
+        """
+        # Map common place types to Wikidata Q-numbers
+        place_type_map = {
+            'pueblo': 'Q532',
+            'city': 'Q515',
+            'town': 'Q3957',
+            'village': 'Q532',
+            'municipality': 'Q15284'
+        }
+
+        place_type_id = place_type_map.get(place_type.lower()) if place_type else None
+        
+        query = f"""
+        SELECT DISTINCT ?place ?placeLabel ?coordinates WHERE {{
+          ?place rdfs:label ?placeLabel;
+                 wdt:P625 ?coordinates.
+          FILTER(REGEX(LCASE(?placeLabel), LCASE("{place_name}"), "i"))  # Changed to REGEX for partial matches
+          FILTER(LANG(?placeLabel) IN ("es", "en"))  # Accept both Spanish and English labels
+          {f'?place wdt:P17 ?country. ?country wdt:P297 "{country_code}".' if country_code else ''}
+          {f'?place wdt:P31/wdt:P279* wd:{place_type_id}.' if place_type_id else ''}
+        }}
+        LIMIT 10
+        """
+
+        try:
+            response = requests.get(
+                self.endpoint,
+                params={
+                    'format': 'json',
+                    'query': query
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"Error querying Wikidata for '{place_name}': {str(e)}")
+            return {"results": {"bindings": []}}
+
+    def get_best_match(self, results: dict, place_name: str, fuzzy_threshold: float = 75) -> tuple:
+        """
+        Get the best matching place from the results based on name similarity.
+        
+        Parameters:
+            results (dict): Results from places_by_name query
+            place_name (str): Original place name to match against
+            fuzzy_threshold (float): Minimum similarity score (0-100) for a match
+        
+        Returns:
+            tuple: (latitude, longitude) or (None, None) if no match found
+        """
+        if not results.get("results", {}).get("bindings"):
+            return (None, None)
+
+        bindings = results["results"]["bindings"]
+        if len(bindings) == 1:
+            coords = bindings[0].get("coordinates", {}).get("value", "")
+            return self._parse_coordinates(coords)
+
+        best_ratio = 0
+        best_coords = None
+        
+        for binding in bindings:
+            label = binding.get("placeLabel", {}).get("value", "")
+            coords = binding.get("coordinates", {}).get("value", "")
+            
+            partial_ratio = fuzz.partial_ratio(place_name.lower(), label.lower())
+            regular_ratio = fuzz.ratio(place_name.lower(), label.lower())
+            ratio = max(partial_ratio, regular_ratio)
+            
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_coords = coords
+                logger.info(f"Found match: '{label}' with similarity {ratio}%")
+
+        if best_ratio >= fuzzy_threshold:
+            return self._parse_coordinates(best_coords)
+        
+        return (None, None)
+
+    def _parse_coordinates(self, coord_string: str) -> tuple:
+        """
+        Parse Wikidata coordinate string into (latitude, longitude) tuple.
+        """
+        try:
+            coord_string = coord_string.replace("Point(", "").replace(")", "")
+            lon, lat = map(float, coord_string.split())
+            return (lat, lon)
+        except Exception as e:
+            logger.error(f"Error parsing coordinates '{coord_string}': {str(e)}")
+            return (None, None)
+        
 if __name__ == "__main__":
-    hgis_query = HGISQuery(config["apis"]["hgis_endpoint"])
-    results = hgis_query.places_by_name(place_name="cuicatlán", fclass="p", ccode="MX")
-    best_match = hgis_query.get_best_match(results, placetype="pueblo", ccode="MX")
-    print(best_match)
+    wikidata = WikidataQuery("https://query.wikidata.org/sparql")
+    print("Searching for municipality:")
+    results = wikidata.places_by_name("teococuilco", country_code="MX", place_type="pueblo")
+    if not results.get("results", {}).get("bindings"):
+        results = wikidata.places_by_name("teococuilco", country_code="MX", place_type="municipality")
+    coordinates = wikidata.get_best_match(results, "teococuilco")
+    print("Municipality coordinates:", coordinates)
