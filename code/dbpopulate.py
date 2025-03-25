@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 config = configparser.ConfigParser()
 config.read("conf/global.conf")
 
+os.makedirs("data/raw", exist_ok=True)
+
 def get_backup_sql(backup_dir: str) -> str:
     """
     Get the SQL script for restoring a database from a backup file.

@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 config = configparser.ConfigParser()
 config.read("conf/global.conf")
 
+os.makedirs("data/interim", exist_ok=True)
 
 def check_mysql_data_exists(query: str) -> bool:
     """
