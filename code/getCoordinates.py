@@ -390,8 +390,53 @@ class WikidataQuery:
             logger.error(f"Error parsing coordinates '{coord_string}': {str(e)}")
             return (None, None)
         
+class PlaceResolver:
+    """
+    A unified resolver that queries multiple geolocation services in order
+    and returns the first match with valid coordinates.
+    """
+    def __init__(self, services: list):
+        self.services = services
+
+    def resolve(self, place_name: str, country_code: str = None, place_type: str = None) -> tuple:
+        """
+        Try resolving the place coordinates using multiple sources.
+
+        Args:
+            place_name (str): The place name to search
+            country_code (str): ISO country code (optional)
+            place_type (str): Place type (optional)
+
+        Returns:
+            tuple: (lat, lon) or (None, None) if not found
+        """
+        for service in self.services:
+            try:
+                logger.info(f"Trying {service.__class__.__name__} for '{place_name}'")
+                results = service.places_by_name(place_name, country_code, place_type)
+                coords = service.get_best_match(results, place_name)
+                if coords != (None, None):
+                    logger.info(f"Resolved '{place_name}' via {service.__class__.__name__}: {coords}")
+                    return coords
+            except Exception as e:
+                logger.warning(f"{service.__class__.__name__} failed for '{place_name}': {e}")
+        logger.warning(f"Could not resolve '{place_name}' via any service.")
+        return (None, None)
+
+
 if __name__ == "__main__":
-    geonames = GeonamesQuery("http://api.geonames.org")
-    results = geonames.places_by_name("teococuilco", country_code="MX", place_type="municipality")
-    coordinates = geonames.get_best_match(results, "teococuilco")
-    print("Municipality coordinates:", coordinates)
+    # use example
+    services = [
+        TGNQuery("http://vocab.getty.edu/sparql"),
+        HGISQuery("https://whgazetteer.org/api"),
+        GeonamesQuery("http://api.geonames.org"),
+        WikidataQuery("https://www.wikidata.org/w/api.php")
+    ]
+    
+    resolver = PlaceResolver(services)
+    place_name = "Cuicatlán"
+    country_code = "MX"
+    place_type = "pueblo"
+    
+    coordinates = resolver.resolve(place_name, country_code, place_type)
+    print("Resolved coordinates:", coordinates)
