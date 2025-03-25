@@ -1,0 +1,8 @@
+[default]
+backup_dir = 
+
+[mysql]
+host = 
+user = 
+password = 
+database = 
