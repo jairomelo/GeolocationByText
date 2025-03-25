@@ -93,17 +93,17 @@ UPDATE `dbgestor_lugar` SET `es_parte_de_id` = 283 WHERE `es_parte_de_id` = 286;
 UPDATE `dbgestor_lugar` SET `es_parte_de_id` = 283 WHERE `es_parte_de_id` = 287;
 
 -- Remove duplicate lugares
-DELETE FROM `dbgestor_lugar` WHERE `id` = 60;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 326;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 181;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 289;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 66;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 67;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 44;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 284;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 285;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 286;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 287;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 60;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 326;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 181;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 289;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 66;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 67;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 44;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 284;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 285;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 286;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 287;
 
 SET FOREIGN_KEY_CHECKS=1;
 
@@ -143,7 +143,7 @@ UPDATE `dbgestor_lugar` SET `es_parte_de_id` = 4 WHERE `es_parte_de_id` = 5;
 UPDATE `dbgestor_lugar` SET `es_parte_de_id` = 173 WHERE `es_parte_de_id` = 294;
 
 -- Remove duplicate lugares
-DELETE FROM `dbgestor_lugar` WHERE `id` = 116;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 140;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 5;
-DELETE FROM `dbgestor_lugar` WHERE `id` = 294;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 116;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 140;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 5;
+DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 294;

@@ -35,7 +35,7 @@ def update_foreign_keys(duplicates_map: dict, tables_to_update: str):
             )
     
     for old_id in duplicates_map.keys():
-        sql_updates.append(f"DELETE FROM `dbgestor_lugar` WHERE `id` = {old_id};")
+        sql_updates.append(f"DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = {old_id};")
     
     os.makedirs('data/sql', exist_ok=True)
     mode = 'a' if os.path.exists('data/sql/update_foreign_keys.sql') else 'w'
