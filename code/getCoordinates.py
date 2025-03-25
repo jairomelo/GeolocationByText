@@ -2,15 +2,14 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 import configparser
 from rapidfuzz import fuzz
 import os
+import json
 import logging
 import requests
 import ast
-from dotenv import load_dotenv
 
 config = configparser.ConfigParser()
 config.read("conf/global.conf")
 
-load_dotenv(config["default"]["env_file"])
 
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename="logs/getCoordinates.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
@@ -213,13 +212,7 @@ class WikidataQuery:
             place_type (str): Optional type of place (e.g., 'pueblo', 'city', 'village', 'municipality')
         """
         # Map common place types to Wikidata Q-numbers
-        place_type_map = {
-            'pueblo': 'Q532',
-            'city': 'Q515',
-            'town': 'Q3957',
-            'village': 'Q532',
-            'municipality': 'Q15284'
-        }
+        place_type_map = json.load(open("conf/wikidata_place_map.json"))
 
         place_type_id = place_type_map.get(place_type.lower()) if place_type else None
         
@@ -307,6 +300,6 @@ if __name__ == "__main__":
     print("Searching for municipality:")
     results = wikidata.places_by_name("teococuilco", country_code="MX", place_type="pueblo")
     if not results.get("results", {}).get("bindings"):
-        results = wikidata.places_by_name("teococuilco", country_code="MX", place_type="municipality")
+        results = wikidata.places_by_name("teococuilco", country_code="MX", place_type="municipio")
     coordinates = wikidata.get_best_match(results, "teococuilco")
     print("Municipality coordinates:", coordinates)
