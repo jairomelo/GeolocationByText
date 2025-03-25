@@ -6,10 +6,12 @@ import json
 import logging
 import requests
 import ast
+from dotenv import load_dotenv
 
 config = configparser.ConfigParser()
 config.read("conf/global.conf")
 
+load_dotenv(config["default"]["env_file"])
 
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename="logs/getCoordinates.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
@@ -184,10 +186,103 @@ class HGISQuery:
 class GeonamesQuery:
     """
     A class to interact with the Geonames API.
+
+    This class provides methods to search and retrieve geographic coordinates for places
+    using the Geonames API. It supports filtering by country and feature class.
+
+    Attributes:
+        endpoint (str): The base URL for the Geonames API
+        username (str): Geonames API username for authentication
+
+    Example:
+        >>> geonames = GeonamesQuery("http://api.geonames.org", username="your_username")
+        >>> results = geonames.places_by_name("Madrid", country="ES")
+        >>> coordinates = geonames.get_best_match(results, "Madrid")
     """
     def __init__(self, endpoint: str):
-        self.endpoint = endpoint
+        self.endpoint = endpoint.rstrip('/')
+        self.username = os.getenv('GEONAMES_USERNAME')
+        if not self.username:
+            raise ValueError("GEONAMES_USERNAME environment variable is required")
+
+    def places_by_name(self, place_name: str, country_code: str = None, place_type: str = None) -> dict:
+        """
+        Search for places using the Geonames API.
         
+        Parameters:
+            place_name (str): Name of the place to search for
+            country_code (str): Optional ISO 3166-1 alpha-2 country code
+            place_type (str): Optional feature class (A: country, P: city/village, etc.)
+        """
+        # Map common place types to Geonames feature classes
+        place_type_map = json.load(open("conf/geonames_place_map.json"))
+
+        params = {
+            'q': place_name,
+            'username': self.username,
+            'maxRows': 10,
+            'type': 'json',
+            'style': 'FULL'
+        }
+        
+        if country_code:
+            params['country'] = country_code
+        
+        if place_type and place_type.lower() in place_type_map:
+            params['featureClass'] = place_type_map[place_type.lower()]
+
+        try:
+            response = requests.get(
+                f"{self.endpoint}/searchJSON",
+                params=params
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"Error querying Geonames for '{place_name}': {str(e)}")
+            return {"geonames": []}
+
+    def get_best_match(self, results: dict, place_name: str, fuzzy_threshold: float = 75) -> tuple:
+        """
+        Get the best matching place from the results based on name similarity.
+        
+        Parameters:
+            results (dict): Results from places_by_name query
+            place_name (str): Original place name to match against
+            fuzzy_threshold (float): Minimum similarity score (0-100) for a match
+        
+        Returns:
+            tuple: (latitude, longitude) or (None, None) if no match found
+        """
+        if not results.get("geonames"):
+            return (None, None)
+
+        geonames = results["geonames"]
+        if len(geonames) == 1:
+            return (float(geonames[0]["lat"]), float(geonames[0]["lng"]))
+
+        best_ratio = 0
+        best_coords = None
+        
+        for place in geonames:
+            name = place.get("name", "")
+            alternate_names = place.get("alternateNames", [])
+            all_names = [name] + [n.get("name", "") for n in alternate_names]
+            
+            for n in all_names:
+                partial_ratio = fuzz.partial_ratio(place_name.lower(), n.lower())
+                regular_ratio = fuzz.ratio(place_name.lower(), n.lower())
+                ratio = max(partial_ratio, regular_ratio)
+                
+                if ratio > best_ratio:
+                    best_ratio = ratio
+                    best_coords = (float(place["lat"]), float(place["lng"]))
+                    logger.info(f"Found match: '{name}' with similarity {ratio}%")
+
+        if best_ratio >= fuzzy_threshold:
+            return best_coords
+        
+        return (None, None)
 
 class WikidataQuery:
     """
@@ -296,10 +391,7 @@ class WikidataQuery:
             return (None, None)
         
 if __name__ == "__main__":
-    wikidata = WikidataQuery("https://query.wikidata.org/sparql")
-    print("Searching for municipality:")
-    results = wikidata.places_by_name("teococuilco", country_code="MX", place_type="pueblo")
-    if not results.get("results", {}).get("bindings"):
-        results = wikidata.places_by_name("teococuilco", country_code="MX", place_type="municipio")
-    coordinates = wikidata.get_best_match(results, "teococuilco")
+    geonames = GeonamesQuery("http://api.geonames.org")
+    results = geonames.places_by_name("teococuilco", country_code="MX", place_type="municipality")
+    coordinates = geonames.get_best_match(results, "teococuilco")
     print("Municipality coordinates:", coordinates)
