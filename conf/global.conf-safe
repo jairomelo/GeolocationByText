@@ -7,5 +7,6 @@ user =
 password = 
 database = 
 
-[sparql]
+[apis]
 tgn_endpoint = https://vocab.getty.edu/sparql
+hgis_endpoint = https://whgazetteer.org/api
