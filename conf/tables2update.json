@@ -1,0 +1,10 @@
+{
+    "1": {"tablename": "dbgestor_personalugarrel", "id_column": "lugar_id"},
+    "2": {"tablename": "dbgestor_archivo", "id_column": "ubicacion_archivo_id"},
+    "3": {"tablename": "dbgestor_documento", "id_column": "lugar_de_produccion_id"},
+    "4": {"tablename": "dbgestor_corporacion", "id_column": "lugar_corporacion_id"},
+    "5": {"tablename": "dbgestor_personaesclavizada", "id_column": "procedencia_id"},
+    "6": {"tablename": "dbgestor_persona", "id_column": "lugar_nacimiento_id"},
+    "7": {"tablename": "dbgestor_persona", "id_column": "lugar_defuncion_id"},
+    "8": {"tablename": "dbgestor_lugar", "id_column": "es_parte_de_id"}
+}
