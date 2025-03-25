@@ -85,8 +85,10 @@ class TGNQuery:
 
 class HGISQuery:
     def __init__(self, endpoint: str):
+        if not endpoint or not isinstance(endpoint, str):
+            raise ValueError("Endpoint must be a non-empty string")
         self.collection = "lugares13k_rel"
-        self.endpoint = endpoint
+        self.endpoint = endpoint.rstrip("/")
         self.search_domain = "/index"
         
     def places_by_name(self, place_name: str, ccode: str = None, fclass: str = 'p') -> dict:
@@ -99,34 +101,52 @@ class HGISQuery:
             fclass (str): Feature class according to Linked Places Format. Default is 'p' for place. Look at https://github.com/LinkedPasts/linked-places-format for more places classes.         
         """
         
+        if not place_name or not isinstance(place_name, str):
+            raise ValueError("place_name must be a non-empty string")
+        if ccode and (not isinstance(ccode, str) or len(ccode) != 2):
+            raise ValueError("ccode must be a valid 2-letter country code")
+        
+        
         url = f"{self.endpoint}{self.search_domain}/?name={place_name}&dataset={self.collection}&ccodes={ccode}&fclass={fclass}"
-        response = requests.get(url)
-        if response.status_code == 200:
+        
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
             return response.json()
-        else:
-            logger.error(f"Error searching for '{place_name}' in {ccode} with fclass {fclass}: {response.status_code}")
-            return {}
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error searching for '{place_name}': {str(e)}")
+            return {"features": []}
+        except ValueError as e:
+            logger.error(f"Invalid JSON response for '{place_name}': {str(e)}")
+            return {"features": []}
+            
         
-    def get_best_match(self, results: dict, place_name: str, fuzzy_thresshold: float = 90, placetype: str = None, ccode: str = None) -> tuple:
+    def get_best_match(self, results: dict, placetype: str = None, ccode: str = None) -> tuple:
         
-        if len(results["features"]) == 0:
-            return (None, None)
-        
-        if len(results["features"]) == 1:
-            coordinates = results["features"][0].get("geometry").get("coordinates")
-            return coordinates[1], coordinates[0]
-
-        for r in results["features"]:
-            placetypes = r.get("properties").get("placetypes")
-            ccodes = r.get("properties").get("ccodes")
-            if placetype.capitalize() in placetypes and ccode in ccodes:
-                coordinates = r.get("geometry").get("coordinates")
+        try:
+            if len(results["features"]) == 0:
+                return (None, None)
+            
+            if len(results["features"]) == 1:
+                coordinates = results["features"][0].get("geometry").get("coordinates")
                 return coordinates[1], coordinates[0]
 
-        return (None, None)
+            for r in results["features"]:
+                placetypes = r.get("properties", {}).get("placetypes", [])
+                ccodes = r.get("properties", {}).get("ccodes", [])
+                if placetype and ccode:
+                    if placetype.capitalize() in placetypes and ccode in ccodes:
+                        coordinates = r["geometry"]["coordinates"]
+                        return coordinates[1], coordinates[0]
+
+            return (None, None)
+        
+        except Exception as e:
+            logger.error(f"Error processing results: {str(e)}")
+            return (None, None)
     
 if __name__ == "__main__":
     hgis_query = HGISQuery(config["apis"]["hgis_endpoint"])
     results = hgis_query.places_by_name(place_name="cuicatlán", fclass="p", ccode="MX")
-    best_match = hgis_query.get_best_match(results, "cuicatlán", 90, "pueblo", ccode="MX")
+    best_match = hgis_query.get_best_match(results, placetype="pueblo", ccode="MX")
     print(best_match)
