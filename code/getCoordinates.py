@@ -14,12 +14,29 @@ logging.basicConfig(level=logging.INFO, filename="logs/getCoordinates.log", file
 logger = logging.getLogger(__name__)
 
 class TGNQuery:
-    def __init__(self, endpoint: str):
+    """
+    A class to interact with the Getty Thesaurus of Geographic Names (TGN) SPARQL endpoint.
+    
+    This class provides methods to search and retrieve geographic coordinates for places
+    using the Getty TGN linked open data service. It supports fuzzy matching of place names
+    and filtering by country and place type.
+
+    Attributes:
+        sparql (SPARQLWrapper): SPARQL endpoint wrapper instance for TGN queries
+        lang (str): Language code for the place type (default: "es")
+
+    Example:
+        >>> tgn = TGNQuery("http://vocab.getty.edu/sparql")
+        >>> results = tgn.Places_by_Triple_FTS("Madrid", "Spain", "ciudad")
+        >>> coordinates = tgn.get_best_match(results, "Madrid")
+    """
+    def __init__(self, endpoint: str, lang: str = "es"):
         self.sparql = SPARQLWrapper(endpoint)
         self.sparql.setReturnFormat(JSON)
+        self.lang = lang
 
     def Places_by_Triple_FTS(self, place_name: str, country_code: str, place_type: str = None) -> dict:
-        type_filter = f'?p gvp:placeType [rdfs:label "{place_type}"@es].' if place_type else ''
+        type_filter = f'?p gvp:placeType [rdfs:label "{place_type}"@{self.lang}].' if place_type else ''
         
         query = f"""
             PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -84,12 +101,29 @@ class TGNQuery:
         return (None, None)
 
 class HGISQuery:
-    def __init__(self, endpoint: str):
+    """
+    A class to interact with the World Historical Gazetteer (WHG) API.
+
+    This class provides methods to search and retrieve geographic coordinates for historical
+    places using the WHG API. It supports filtering by country code and feature class,
+    and includes functionality to find the best matching place from multiple results.
+
+    Attributes:
+        collection (str): The WHG collection to search in (default: 'lugares13k_rel')
+        endpoint (str): The base URL for the WHG API
+        search_domain (str): The API endpoint path for searches. Default is "/index"
+
+    Example:
+        >>> hgis = HGISQuery("https://whgazetteer.org/api")
+        >>> results = hgis.places_by_name("Cuicatlán", ccode="MX", fclass="p")
+        >>> coordinates = hgis.get_best_match(results, placetype="pueblo", ccode="MX")
+    """
+    def __init__(self, endpoint: str, search_domain: str = "/index"):
         if not endpoint or not isinstance(endpoint, str):
             raise ValueError("Endpoint must be a non-empty string")
         self.collection = "lugares13k_rel"
         self.endpoint = endpoint.rstrip("/")
-        self.search_domain = "/index"
+        self.search_domain = search_domain
         
     def places_by_name(self, place_name: str, ccode: str = None, fclass: str = 'p') -> dict:
         """
