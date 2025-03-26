@@ -1,5 +1,8 @@
 [default]
 backup_dir = 
+env_file = 
+log_dir = logs
+log_level = INFO
 
 [mysql]
 host = 
