@@ -1,5 +1,7 @@
 from getCoordinates import PlaceResolver, TGNQuery, HGISQuery, GeonamesQuery, WikidataQuery
 import pandas as pd
+import os
+from datetime import datetime
 from utils.logController import setup_logger
 
 logger = setup_logger("geolocate")
@@ -75,7 +77,39 @@ def set_lat_lon(lugares_df: pd.DataFrame) -> pd.DataFrame:
     
     return lugares_df
 
-def main(df: pd.DataFrame, destination: str, geolocate: bool = True, lat_lon: bool = True, dry_run: bool = True):
+def update_sql_records(df: pd.DataFrame):
+    """
+    Custom function to update SQL records with the new lat/lon
+    values. This code is tailored to the specific needs
+    of Trayectorias Afro database.
+    """
+    
+    df = df[df["coordenadas"] != "(None, None)"]
+    df = df[["lugar_id", "lat", "lon"]]
+    
+    logger.info(f"Updating {len(df)} SQL records")
+    
+    sql_updates = []
+    
+    for index, row in df.iterrows():
+        sql_updates.append(f"UPDATE `dbgestor_lugar` SET `lat` = {row['lat']}, `lon` = {row['lon']} WHERE `lugar_id` = {int(row['lugar_id'])};")
+    
+    mode = 'a' if os.path.exists('data/sql/update_foreign_keys.sql') else 'w'
+    
+    logger.info(f"Writing {len(sql_updates)} SQL updates to data/sql/update_foreign_keys.sql")
+    
+    with open('data/sql/update_foreign_keys.sql', mode) as f:
+        f.write("START TRANSACTION;\n\n")
+        
+        f.write(f"-- {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("-- Add lat/lon to dbgestor_lugar records\n")
+        f.write("\n".join(sql_updates))  
+        f.write("\n")
+        
+        f.write("COMMIT;\n")
+    
+
+def main(df: pd.DataFrame, destination: str, geolocate: bool = True, lat_lon: bool = True, update_sql: bool = True, dry_run: bool = True):
     logger.info(f"Total places: {len(df)}")
 
     if geolocate:
@@ -92,6 +126,10 @@ def main(df: pd.DataFrame, destination: str, geolocate: bool = True, lat_lon: bo
             logger.error(f"Error setting lat/lon: {e}")
 
     if not dry_run:
+        if update_sql:
+            update_sql_records(df)
+            logger.info("Successfully updated SQL records")
+        
         df.to_csv(destination, index=False)
         logger.info(f"Successfully processed {len(df)} places")
     else:
@@ -100,4 +138,4 @@ def main(df: pd.DataFrame, destination: str, geolocate: bool = True, lat_lon: bo
 if __name__ == "__main__":
     df = pd.read_csv("data/processed/lugares_geolocated.csv")
     destination_file = "data/processed/lugares_geolocated_lat_lon.csv"
-    main(df, destination_file, geolocate=False, lat_lon=False, dry_run=True)
+    main(df, destination_file, geolocate=False, lat_lon=False, update_sql=True, dry_run=False)
