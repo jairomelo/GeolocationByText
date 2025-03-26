@@ -2,11 +2,9 @@ import mysql.connector as mysql
 import pandas as pd
 import configparser
 import os
-import logging
+from utils.logController import setup_logger
 
-os.makedirs("logs", exist_ok=True)
-logging.basicConfig(level=logging.INFO, filename="logs/extractData.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-logger = logging.getLogger(__name__)
+logger = setup_logger("extractData")
 
 config = configparser.ConfigParser()
 config.read("conf/global.conf")

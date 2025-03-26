@@ -1,12 +1,10 @@
 import pandas as pd
 import os
-import logging
 from rapidfuzz import fuzz
 import json
+from utils.logController import setup_logger
 
-os.makedirs("logs", exist_ok=True)
-logging.basicConfig(level=logging.INFO, filename="logs/preprocessing.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-logger = logging.getLogger(__name__)
+logger = setup_logger("preprocessing")
 
 def update_foreign_keys(duplicates_map: dict, tables_to_update: str):
     """

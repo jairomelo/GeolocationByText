@@ -3,19 +3,17 @@ import configparser
 from rapidfuzz import fuzz
 import os
 import json
-import logging
 import requests
 import ast
 from dotenv import load_dotenv
+from utils.logController import setup_logger
+
+logger = setup_logger("getCoordinates")
 
 config = configparser.ConfigParser()
 config.read("conf/global.conf")
 
 load_dotenv(config["default"]["env_file"])
-
-os.makedirs("logs", exist_ok=True)
-logging.basicConfig(level=logging.INFO, filename="logs/getCoordinates.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-logger = logging.getLogger(__name__)
 
 class TGNQuery:
     """
