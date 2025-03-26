@@ -31,7 +31,7 @@ class TGNQuery:
 
     Example:
         >>> tgn = TGNQuery("http://vocab.getty.edu/sparql")
-        >>> results = tgn.Places_by_Triple_FTS("Madrid", "Spain", "ciudad")
+        >>> results = tgn.places_by_name("Madrid", "Spain", "ciudad")
         >>> coordinates = tgn.get_best_match(results, "Madrid")
     """
     def __init__(self, endpoint: str, lang: str = "es"):
@@ -39,7 +39,15 @@ class TGNQuery:
         self.sparql.setReturnFormat(JSON)
         self.lang = lang
 
-    def Places_by_Triple_FTS(self, place_name: str, country_code: str, place_type: str = None) -> dict:
+    def places_by_name(self, place_name: str, country_code: str, place_type: str = None) -> dict:
+        """
+        Search for places using the TGN SPARQL endpoint.
+        
+        Parameters:
+            place_name (str): Name of the place to search for
+            country_code (str): Country code or name
+            place_type (str): Optional type of place (e.g., 'ciudad', 'pueblo')
+        """
         type_filter = f'?p gvp:placeType [rdfs:label "{place_type}"@{self.lang}].' if place_type else ''
         
         query = f"""
@@ -65,7 +73,6 @@ class TGNQuery:
         except Exception as e:
             logger.error(f"Error querying TGN for '{place_name}': {str(e)}")
             return []
-        
 
     def get_coordinates_lod_json(self, tgn_uri: str) -> tuple:
         json_url = tgn_uri + ".json"
