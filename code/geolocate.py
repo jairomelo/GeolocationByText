@@ -1,11 +1,8 @@
 from getCoordinates import PlaceResolver, TGNQuery, HGISQuery, GeonamesQuery, WikidataQuery
 import pandas as pd
-import os
-import logging
+from utils.logController import setup_logger
 
-os.makedirs("logs", exist_ok=True)
-logging.basicConfig(level=logging.INFO, filename="logs/geolocate.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-logger = logging.getLogger(__name__)
+logger = setup_logger("geolocate")
 
 def geolocate_lugar(lugar_name: str, country_code: str, place_type: str) -> tuple:
     
@@ -78,22 +75,29 @@ def set_lat_lon(lugares_df: pd.DataFrame) -> pd.DataFrame:
     
     return lugares_df
 
-def main():
-    lugares_df = pd.read_csv("data/processed/lugares_geolocated.csv")
-    logger.info(f"Total places: {len(lugares_df)}")
+def main(df: pd.DataFrame, destination: str, geolocate: bool = True, lat_lon: bool = True, dry_run: bool = True):
+    logger.info(f"Total places: {len(df)}")
 
-    # Geolocate missing coordinates
-    lugares_df = geolocate_lugares(lugares_df, "")
+    if geolocate:
+        # Geolocate missing coordinates
+        df = geolocate_lugares(df, "")
+        logger.info(f"Successfully geolocated {len(df)} places")
 
     # Convert string coordinates to lat/lon columns
-    try:
-        lugares_df = set_lat_lon(lugares_df)
-        logger.info(f"Successfully extracted lat/lon for {len(lugares_df)} places")
-    except Exception as e:
-        logger.error(f"Error setting lat/lon: {e}")
+    if lat_lon:
+        try:
+            df = set_lat_lon(df)
+            logger.info(f"Successfully extracted lat/lon for {len(df)} places")
+        except Exception as e:
+            logger.error(f"Error setting lat/lon: {e}")
 
-    lugares_df.to_csv("data/processed/lugares_geolocated.csv", index=False)
-    
+    if not dry_run:
+        df.to_csv(destination, index=False)
+        logger.info(f"Successfully processed {len(df)} places")
+    else:
+        logger.info(f"Dry run completed. Would have processed {len(df)} places")
 
 if __name__ == "__main__":
-    main()
+    df = pd.read_csv("data/processed/lugares_geolocated.csv")
+    destination_file = "data/processed/lugares_geolocated_lat_lon.csv"
+    main(df, destination_file, geolocate=False, lat_lon=False, dry_run=True)
