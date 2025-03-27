@@ -115,37 +115,29 @@ UPDATE `dbgestor_personalugarrel` SET `lugar_id` = 5 WHERE `lugar_id` = 4;
 UPDATE `dbgestor_personalugarrel` SET `lugar_id` = 173 WHERE `lugar_id` = 294;
 UPDATE `dbgestor_archivo` SET `ubicacion_archivo_id` = 39 WHERE `ubicacion_archivo_id` = 116;
 UPDATE `dbgestor_archivo` SET `ubicacion_archivo_id` = 91 WHERE `ubicacion_archivo_id` = 140;
-UPDATE `dbgestor_archivo` SET `ubicacion_archivo_id` = 4 WHERE `ubicacion_archivo_id` = 5;
 UPDATE `dbgestor_archivo` SET `ubicacion_archivo_id` = 173 WHERE `ubicacion_archivo_id` = 294;
 UPDATE `dbgestor_documento` SET `lugar_de_produccion_id` = 39 WHERE `lugar_de_produccion_id` = 116;
 UPDATE `dbgestor_documento` SET `lugar_de_produccion_id` = 91 WHERE `lugar_de_produccion_id` = 140;
-UPDATE `dbgestor_documento` SET `lugar_de_produccion_id` = 4 WHERE `lugar_de_produccion_id` = 5;
 UPDATE `dbgestor_documento` SET `lugar_de_produccion_id` = 173 WHERE `lugar_de_produccion_id` = 294;
 UPDATE `dbgestor_corporacion` SET `lugar_corporacion_id` = 39 WHERE `lugar_corporacion_id` = 116;
 UPDATE `dbgestor_corporacion` SET `lugar_corporacion_id` = 91 WHERE `lugar_corporacion_id` = 140;
-UPDATE `dbgestor_corporacion` SET `lugar_corporacion_id` = 4 WHERE `lugar_corporacion_id` = 5;
 UPDATE `dbgestor_corporacion` SET `lugar_corporacion_id` = 173 WHERE `lugar_corporacion_id` = 294;
 UPDATE `dbgestor_personaesclavizada` SET `procedencia_id` = 39 WHERE `procedencia_id` = 116;
 UPDATE `dbgestor_personaesclavizada` SET `procedencia_id` = 91 WHERE `procedencia_id` = 140;
-UPDATE `dbgestor_personaesclavizada` SET `procedencia_id` = 4 WHERE `procedencia_id` = 5;
 UPDATE `dbgestor_personaesclavizada` SET `procedencia_id` = 173 WHERE `procedencia_id` = 294;
 UPDATE `dbgestor_persona` SET `lugar_nacimiento_id` = 39 WHERE `lugar_nacimiento_id` = 116;
 UPDATE `dbgestor_persona` SET `lugar_nacimiento_id` = 91 WHERE `lugar_nacimiento_id` = 140;
-UPDATE `dbgestor_persona` SET `lugar_nacimiento_id` = 4 WHERE `lugar_nacimiento_id` = 5;
 UPDATE `dbgestor_persona` SET `lugar_nacimiento_id` = 173 WHERE `lugar_nacimiento_id` = 294;
 UPDATE `dbgestor_persona` SET `lugar_defuncion_id` = 39 WHERE `lugar_defuncion_id` = 116;
 UPDATE `dbgestor_persona` SET `lugar_defuncion_id` = 91 WHERE `lugar_defuncion_id` = 140;
-UPDATE `dbgestor_persona` SET `lugar_defuncion_id` = 4 WHERE `lugar_defuncion_id` = 5;
 UPDATE `dbgestor_persona` SET `lugar_defuncion_id` = 173 WHERE `lugar_defuncion_id` = 294;
 UPDATE `dbgestor_lugar` SET `es_parte_de_id` = 39 WHERE `es_parte_de_id` = 116;
 UPDATE `dbgestor_lugar` SET `es_parte_de_id` = 91 WHERE `es_parte_de_id` = 140;
-UPDATE `dbgestor_lugar` SET `es_parte_de_id` = 4 WHERE `es_parte_de_id` = 5;
 UPDATE `dbgestor_lugar` SET `es_parte_de_id` = 173 WHERE `es_parte_de_id` = 294;
 
 -- Remove duplicate lugares
 DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 116;
 DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 140;
-DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 5;
 DELETE FROM `dbgestor_lugar` WHERE `lugar_id` = 294;
 START TRANSACTION;
 
