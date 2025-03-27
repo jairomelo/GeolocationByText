@@ -76,8 +76,6 @@ pip install -r requirements.txt
 │   ├── preprocessing.py
 │   ├── geolocate.py
 │   └── getCoordinates.py
-├── notebooks/
-│   └── (optional analysis/QA notebooks)
 ├── README.md
 └── requirements.txt
 ```
