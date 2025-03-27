@@ -35,7 +35,7 @@ Each place name is compared across sources using fuzzy matching, country codes, 
 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/trayectorias-geocoder.git
+git clone https://github.com/jairomelo/trayectorias-geocoder.git
 cd trayectorias-geocoder
 ```
 
